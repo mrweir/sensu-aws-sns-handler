@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -103,10 +104,13 @@ func executeHandler(event *corev2.Event) error {
 
 	var svc *sns.SNS
 
-	message, err := templates.EvalTemplate("SNSMessage", plugin.Message, event)
+	// message, err := templates.EvalTemplate("SNSMessage", plugin.Message, event)
+	message, err := json.Marshal(event)
 	if err != nil {
 		return err
 	}
+
+	stringMessage := string(message)
 
 	subject, err := templates.EvalTemplate("SNSSubject", plugin.Subject, event)
 	if err != nil {
@@ -135,8 +139,9 @@ func executeHandler(event *corev2.Event) error {
 
 	// message should be a template with a specific default
 	publishOut, err := svc.Publish(&sns.PublishInput{
-		Subject:  &subject,
-		Message:  &message,
+		Subject: &subject,
+		// Message:  &message,
+		Message:  &stringMessage,
 		TopicArn: &plugin.TopicARN,
 	})
 	if err != nil {

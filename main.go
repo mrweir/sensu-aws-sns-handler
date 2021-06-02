@@ -18,11 +18,12 @@ import (
 // Config represents the handler plugin config.
 type Config struct {
 	sensu.PluginConfig
-	TopicARN      string
-	Message       string
-	Subject       string
-	AssumeRoleARN string
-	UseEC2Region  bool
+	TopicARN       string
+	MessageGroupId string
+	Message        string
+	Subject        string
+	AssumeRoleARN  string
+	UseEC2Region   bool
 }
 
 var (
@@ -43,6 +44,15 @@ var (
 			Default:   "",
 			Usage:     "The SNS Topic ARN",
 			Value:     &plugin.TopicARN,
+		},
+		{
+			Path:      "message-group-id",
+			Env:       "SNS_MESSAGE_GROUP_ID",
+			Argument:  "message-group-id",
+			Shorthand: "i",
+			Default:   "",
+			Usage:     "The MessageGroupID for FIFO SNS topics",
+			Value:     &plugin.MessageGroupId,
 		},
 		{
 			Path:      "message-template",
@@ -141,8 +151,9 @@ func executeHandler(event *corev2.Event) error {
 	publishOut, err := svc.Publish(&sns.PublishInput{
 		Subject: &subject,
 		// Message:  &message,
-		Message:  &stringMessage,
-		TopicArn: &plugin.TopicARN,
+		Message:        &stringMessage,
+		MessageGroupId: &plugin.MessageGroupId,
+		TopicArn:       &plugin.TopicARN,
 	})
 	if err != nil {
 		return fmt.Errorf("Failed to publish message to SNS: %v", err)
